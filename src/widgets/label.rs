@@ -1,56 +1,37 @@
-use orbclient::{Color, Renderer};
+use orbclient::Renderer;
 use std::cell::{Cell, RefCell};
 use std::sync::Arc;
 
 use cell::{CloneCell, CheckSet};
+use draw::draw_box;
 use event::Event;
 use point::Point;
 use rect::Rect;
-use theme::{LABEL_BACKGROUND, LABEL_BORDER, LABEL_FOREGROUND};
-use traits::{Border, Click, Place, Text};
+use theme::{Theme, Selector};
+use traits::{Click, Place, Text};
 use widgets::Widget;
 
 pub struct Label {
     pub rect: Cell<Rect>,
-    pub bg: Cell<Color>,
-    pub fg: Cell<Color>,
-    pub fg_border: Cell<Color>,
     pub border: Cell<bool>,
     pub border_radius: Cell<u32>,
     pub text: CloneCell<String>,
     pub text_offset: Cell<Point>,
     click_callback: RefCell<Option<Arc<Fn(&Label, Point)>>>,
     pressed: Cell<bool>,
-    pub visible: Cell<bool>,
 }
 
 impl Label {
     pub fn new() -> Arc<Self> {
         Arc::new(Label {
             rect: Cell::new(Rect::default()),
-            bg: Cell::new(LABEL_BACKGROUND),
-            fg: Cell::new(LABEL_FOREGROUND),
-            fg_border: Cell::new(LABEL_BORDER),
             border: Cell::new(false),
             border_radius: Cell::new(0),
             text: CloneCell::new(String::new()),
             text_offset: Cell::new(Point::default()),
             click_callback: RefCell::new(None),
             pressed: Cell::new(false),
-            visible: Cell::new(true),
         })
-    }
-}
-
-impl Border for Label {
-    fn border(&self, enabled: bool) -> &Self {
-        self.border.set(enabled);
-        self
-    }
-
-    fn border_radius(&self, radius: u32) -> &Self {
-        self.border_radius.set(radius);
-        self
     }
 }
 
@@ -82,34 +63,31 @@ impl Text for Label {
 }
 
 impl Widget for Label {
+    fn name(&self) -> &str {
+        "Label"
+    }
+
     fn rect(&self) -> &Cell<Rect> {
         &self.rect
     }
 
-    fn draw(&self, renderer: &mut Renderer, _focused: bool) {
-        if self.visible.get(){
-            let rect = self.rect.get();
+    fn draw(&self, renderer: &mut Renderer, _focused: bool, theme: &Theme) {
+        let rect = self.rect.get();
 
-            let b_r = self.border_radius.get();
-            renderer.rounded_rect(rect.x, rect.y, rect.width, rect.height, b_r, true, self.bg.get());
-            if self.border.get() {
-                renderer.rounded_rect(rect.x, rect.y, rect.width, rect.height, b_r, false, self.fg_border.get());
-            }
+        draw_box(renderer, rect, theme, &Selector::new(Some("label")));
 
-            let fg = self.fg.get();
-            let text = self.text.borrow();
+        let text = self.text.borrow();
 
-            let mut point = self.text_offset.get();
-            for c in text.chars() {
-                if c == '\n' {
-                    point.x = self.text_offset.get().x;
-                    point.y += 16;
-                } else {
-                    if point.x + 8 <= rect.width as i32 && point.y + 16 <= rect.height as i32 {
-                        renderer.char(point.x + rect.x, point.y + rect.y, c, fg);
-                    }
-                    point.x += 8;
+        let mut point = self.text_offset.get();
+        for c in text.chars() {
+            if c == '\n' {
+                point.x = self.text_offset.get().x;
+                point.y += 16;
+            } else {
+                if point.x + 8 <= rect.width as i32 && point.y + 16 <= rect.height as i32 {
+                    renderer.char(point.x + rect.x, point.y + rect.y, c, theme.color("color", &"label".into()));
                 }
+                point.x += 8;
             }
         }
     }
@@ -148,9 +126,5 @@ impl Widget for Label {
         }
 
         focused
-    }
-    
-    fn visible(&self, flag: bool){
-        self.visible.set(flag);
     }
 }

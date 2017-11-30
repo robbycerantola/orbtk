@@ -7,6 +7,7 @@ use std::sync::Arc;
 use event::Event;
 use point::Point;
 use rect::Rect;
+use theme::{Theme};
 use traits::{Click, Place};
 use widgets::Widget;
 
@@ -14,7 +15,6 @@ pub struct Image {
     pub rect: Cell<Rect>,
     pub image: RefCell<orbimage::Image>,
     click_callback: RefCell<Option<Arc<Fn(&Image, Point)>>>,
-    pub visible: Cell<bool>,
 }
 
 impl Image {
@@ -30,8 +30,7 @@ impl Image {
         Arc::new(Image {
             rect: Cell::new(Rect::new(0, 0, image.width(), image.height())),
             image: RefCell::new(image),
-            click_callback: RefCell::new(None),
-            visible: Cell::new(true),
+            click_callback: RefCell::new(None)
         })
     }
 
@@ -56,36 +55,33 @@ impl Click for Image {
 impl Place for Image {}
 
 impl Widget for Image {
+    fn name(&self) -> &str {
+        "Image"
+    }
+
     fn rect(&self) -> &Cell<Rect> {
         &self.rect
     }
 
-    fn draw(&self, renderer: &mut Renderer, _focused: bool) {
-        if self.visible.get(){
-            let rect = self.rect.get();
-            let image = self.image.borrow();
-            renderer.image(rect.x, rect.y, image.width(), image.height(), image.data());
-        }
+    fn draw(&self, renderer: &mut Renderer, _focused: bool, _theme: &Theme) {
+        let rect = self.rect.get();
+        let image = self.image.borrow();
+        renderer.image(rect.x, rect.y, image.width(), image.height(), image.data());
     }
 
     fn event(&self, event: Event, focused: bool, redraw: &mut bool) -> bool {
-        if self.visible.get(){
-            match event {
-                Event::Mouse { point, left_button, .. } => {
-                    let rect = self.rect.get();
-                    if rect.contains(point) && left_button {
-                        let click_point: Point = point - rect.point();
-                        self.emit_click(click_point);
-                        *redraw = true;
-                    }
+        match event {
+            Event::Mouse { point, left_button, .. } => {
+                let rect = self.rect.get();
+                if rect.contains(point) && left_button {
+                    let click_point: Point = point - rect.point();
+                    self.emit_click(click_point);
+                    *redraw = true;
                 }
-                _ => (),
             }
+            _ => (),
         }
+
         focused
-    }
-    
-    fn visible(&self, flag: bool){
-        self.visible.set(flag);
     }
 }

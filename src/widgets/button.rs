@@ -1,60 +1,35 @@
-use orbclient::{Color, Renderer};
+use orbclient::Renderer;
 use std::cell::{Cell, RefCell};
 use std::sync::Arc;
 
 use cell::{CloneCell, CheckSet};
+use draw::draw_box;
 use event::Event;
 use point::Point;
 use rect::Rect;
-use theme::{BUTTON_BACKGROUND, BUTTON_BG_SELECTION, BUTTON_FOREGROUND, BUTTON_FG_SELECTION, BUTTON_BORDER};
-use traits::{Border, Click, Place, Text};
+use theme::{Selector, Theme};
+use traits::{Click, Place, Text};
 use widgets::Widget;
 
 pub struct Button {
     pub rect: Cell<Rect>,
-    pub bg: Color,
-    pub bg_selected: Color,
-    pub fg: Color,
-    pub fg_selected: Color,
-    pub fg_border: Color,
-    pub border: Cell<bool>,
-    pub border_radius: Cell<u32>,
     pub text: CloneCell<String>,
     pub text_offset: Cell<Point>,
     click_callback: RefCell<Option<Arc<Fn(&Button, Point)>>>,
+    hover: Cell<bool>,
     pressed: Cell<bool>,
-    pub visible: Cell<bool>,
 }
 
 impl Button {
     pub fn new() -> Arc<Self> {
         Arc::new(Button {
             rect: Cell::new(Rect::default()),
-            bg: BUTTON_BACKGROUND,
-            bg_selected: BUTTON_BG_SELECTION,
-            fg: BUTTON_FOREGROUND,
-            fg_selected: BUTTON_FG_SELECTION,
-            fg_border: BUTTON_BORDER,
-            border: Cell::new(true),
-            border_radius: Cell::new(2),
             text: CloneCell::new(String::new()),
             text_offset: Cell::new(Point::default()),
             click_callback: RefCell::new(None),
+            hover: Cell::new(false),
             pressed: Cell::new(false),
-            visible: Cell::new(true),
         })
-    }
-}
-
-impl Border for Button {
-    fn border(&self, enabled: bool) -> &Self {
-        self.border.set(enabled);
-        self
-    }
-
-    fn border_radius(&self, radius: u32) -> &Self {
-        self.border_radius.set(radius);
-        self
     }
 }
 
@@ -86,87 +61,91 @@ impl Text for Button {
 }
 
 impl Widget for Button {
+    fn name(&self) -> &str {
+        "Button"
+    }
+
     fn rect(&self) -> &Cell<Rect> {
         &self.rect
     }
 
-    fn draw(&self, renderer: &mut Renderer, _focused: bool) {
-        if self.visible.get(){
-            let rect = self.rect.get();
-
-            let w = rect.width as i32;
-            let h = rect.height as i32;
-
-            let (fg, bg) = if self.pressed.get() {
-                (self.fg_selected, self.bg_selected)
+    fn draw(&self, renderer: &mut Renderer, _focused: bool, theme: &Theme) {
+        let mut selector = Selector::new(Some("button")).with_pseudo_class(
+            if self.pressed.get() {
+                "active"
             } else {
-                (self.fg, self.bg)
-            };
-
-            let b_r = self.border_radius.get();
-
-            renderer.rounded_rect(rect.x, rect.y, rect.width, rect.height, b_r, true, bg);
-
-            if self.border.get() {
-                renderer.rounded_rect(rect.x, rect.y, rect.width, rect.height, b_r, false, self.fg_border);
+                "inactive"
             }
+        );
 
-            let text = self.text.borrow();
+        if self.hover.get() {
+            selector = selector.with_pseudo_class("hover");
+        }
 
-            let mut point = self.text_offset.get();
-            for c in text.chars() {
-                if c == '\n' {
-                    point.x = self.text_offset.get().x;
-                    point.y += 16;
-                } else {
-                    if point.x + 8 <= w && point.y + 16 <= h {
-                        renderer.char(point.x + rect.x, point.y + rect.y, c, fg);
-                    }
-                    point.x += 8;
+        let rect = self.rect.get();
+
+        let w = rect.width as i32;
+        let h = rect.height as i32;
+
+        draw_box(renderer, rect, theme, &selector);
+
+        let text = self.text.borrow();
+
+        let mut point = self.text_offset.get();
+        for c in text.chars() {
+            if c == '\n' {
+                point.x = self.text_offset.get().x;
+                point.y += 16;
+            } else {
+                if point.x + 8 <= w && point.y + 16 <= h {
+                    renderer.char(point.x + rect.x, point.y + rect.y, c, theme.color("color", &selector));
                 }
+                point.x += 8;
             }
         }
     }
 
     fn event(&self, event: Event, focused: bool, redraw: &mut bool) -> bool {
-        if self.visible.get(){
-            match event {
-                Event::Mouse { point, left_button, .. } => {
-                    let mut click = false;
+        match event {
+            Event::Mouse { point, left_button, .. } => {
+                let mut click = false;
 
-                    let rect = self.rect.get();
-                    if rect.contains(point) {
-                        if left_button {
-                            if self.pressed.check_set(true) {
-                                *redraw = true;
-                            }
-                        } else {
-                            if self.pressed.check_set(false) {
-                                click = true;
-                                *redraw = true;
-                            }
+                let rect = self.rect.get();
+                if rect.contains(point) {
+                    if self.hover.check_set(true) {
+                        *redraw = true;
+                    }
+
+                    if left_button {
+                        if self.pressed.check_set(true) {
+                            *redraw = true;
                         }
                     } else {
-                        if !left_button {
-                            if self.pressed.check_set(false) {
-                                *redraw = true;
-                            }
+                        if self.pressed.check_set(false) {
+                            click = true;
+                            *redraw = true;
                         }
                     }
+                } else {
+                    if self.hover.check_set(false) {
+                        *redraw = true;
+                    }
 
-                    if click {
-                        let click_point: Point = point - rect.point();
-                        self.emit_click(click_point);
+                    if !left_button {
+                        if self.pressed.check_set(false) {
+                            *redraw = true;
+                        }
                     }
                 }
-                _ => (),
+
+                if click {
+                    let click_point: Point = point - rect.point();
+                    self.emit_click(click_point);
+                }
             }
+            _ => (),
         }
 
         focused
     }
-    
-    fn visible(&self, flag: bool){
-        self.visible.set(flag);
-    }    
 }

@@ -1,15 +1,16 @@
-use orbclient::{Color, Renderer};
+use orbclient::Renderer;
 use std::cell::{Cell, RefCell};
 use std::cmp::{max, min};
 use std::ops::Deref;
 use std::sync::Arc;
 
 use cell::{CloneCell, CheckSet};
+use draw::draw_box;
 use event::Event;
 use point::Point;
 use rect::Rect;
-use theme::{TEXT_BACKGROUND, TEXT_BORDER, TEXT_FOREGROUND, TEXT_SELECTION};
-use traits::{Border, Click, Enter, EventFilter, Place, Text};
+use theme::{Theme, Selector};
+use traits::{Click, Enter, EventFilter, Place, Text};
 use widgets::Widget;
 
 /// Find next character index
@@ -26,12 +27,6 @@ fn prev_i(text: &str, text_i: usize) -> usize {
 
 pub struct TextBox {
     pub rect: Cell<Rect>,
-    pub bg: Color,
-    pub fg: Color,
-    pub fg_border: Color,
-    pub fg_cursor: Color,
-    pub border: Cell<bool>,
-    pub border_radius: Cell<u32>,
     pub text: CloneCell<String>,
     pub text_i: Cell<usize>,
     pub text_offset: Cell<Point>,
@@ -50,19 +45,12 @@ pub struct TextBox {
     /// handler deal with it.
     pub event_filter: RefCell<Option<Arc<Fn(&TextBox, Event, &mut bool, &mut bool) -> Option<Event>>>>,
     pressed: Cell<bool>,
-    pub visible: Cell<bool>,
 }
 
 impl TextBox {
     pub fn new() -> Arc<Self> {
         Arc::new(TextBox {
             rect: Cell::new(Rect::default()),
-            bg: TEXT_BACKGROUND,
-            fg: TEXT_FOREGROUND,
-            fg_border: TEXT_BORDER,
-            fg_cursor: TEXT_SELECTION,
-            border: Cell::new(true),
-            border_radius: Cell::new(0),
             text: CloneCell::new(String::new()),
             text_i: Cell::new(0),
             text_offset: Cell::new(Point::default()),
@@ -73,7 +61,6 @@ impl TextBox {
             enter_callback: RefCell::new(None),
             event_filter: RefCell::new(None),
             pressed: Cell::new(false),
-            visible: Cell::new(true),
         })
     }
 
@@ -84,18 +71,6 @@ impl TextBox {
 
     pub fn mask_char(&self, mask_char: Option<char>) -> &Self {
         self.mask_char.set(mask_char);
-        self
-    }
-}
-
-impl Border for TextBox {
-    fn border(&self, enabled: bool) -> &Self {
-        self.border.set(enabled);
-        self
-    }
-
-    fn border_radius(&self, radius: u32) -> &Self {
-        self.border_radius.set(radius);
         self
     }
 }
@@ -158,66 +133,70 @@ impl Text for TextBox {
 }
 
 impl Widget for TextBox {
+    fn name(&self) -> &str {
+        "TextBox"
+    }
+
     fn rect(&self) -> &Cell<Rect> {
         &self.rect
     }
 
-    fn draw(&self, renderer: &mut Renderer, focused: bool) {
-        if self.visible.get(){
-            let rect = self.rect.get();
+    fn draw(&self, renderer: &mut Renderer, focused: bool, theme: &Theme) {
+        let rect = self.rect.get();
 
-            let b_r = self.border_radius.get();
-            renderer.rounded_rect(rect.x, rect.y, rect.width, rect.height, b_r, true, self.bg);
-            if self.border.get() {
-                renderer.rounded_rect(rect.x, rect.y, rect.width, rect.height, b_r, false, self.fg_border);
-            }
+        let mut selector = Selector::new(Some("text-box"));
 
-            let text_i = self.text_i.get();
-            let text = self.text.borrow();
+        if focused {
+            selector = selector.with_pseudo_class("focus");
+        }
 
-            let text_offset = self.text_offset.get();
-            let scroll_offset = self.scroll_offset.get();
+        draw_box(renderer, rect, theme, &selector);
 
-            let mut x = text_offset.x - scroll_offset.0 * 8;
-            let mut y = text_offset.y - scroll_offset.1 * 16;
-            let start_x = x;
-            for (i, c) in text.char_indices() {
-                let mut c_r = Rect::new(x + rect.x, y + rect.y, 8, 16);
-                if c == '\n' {
-                    if focused && i == text_i && rect.contains_rect(&c_r) {
-                        renderer.rect(x + rect.x, y + rect.y, 8, 16, self.fg_cursor);
-                    }
+        let text_i = self.text_i.get();
+        let text = self.text.borrow();
 
-                    x = start_x;
-                    y += c_r.height as i32;
-                } else if c == '\t' {
-                    c_r.width = 8 * 4;
+        let text_offset = self.text_offset.get();
+        let scroll_offset = self.scroll_offset.get();
 
-                    if focused && i == text_i && rect.contains_rect(&c_r) {
-                        renderer.rect(x + rect.x, y + rect.y, 8 * 4, 16, self.fg_cursor);
-                    }
-
-                    x += c_r.width as i32;
-                } else {
-                    if rect.contains_rect(&c_r) {
-                        if i == text_i && focused {
-                            renderer.rect(x + rect.x, y + rect.y, 8, 16, self.fg_cursor);
-                        }
-                        if let Some(mask_c) = self.mask_char.get() {
-                            renderer.char(x + rect.x, y + rect.y, mask_c, self.fg);
-                        } else {
-                            renderer.char(x + rect.x, y + rect.y, c, self.fg);
-                        }
-                    }
-
-                    x += c_r.width as i32;
+        let mut x = text_offset.x - scroll_offset.0 * 8;
+        let mut y = text_offset.y - scroll_offset.1 * 16;
+        let start_x = x;
+        for (i, c) in text.char_indices() {
+            let mut c_r = Rect::new(x + rect.x, y + rect.y, 8, 16);
+            if c == '\n' {
+                if focused && i == text_i && rect.contains_rect(&c_r) {
+                    draw_box(renderer, Rect::new(x + rect.x, y + rect.y, 8, 16), theme, &"selection".into());
                 }
-            }
 
-            let c_r = Rect::new(x + rect.x, y + rect.y, 8, 16);
-            if focused && text.len() == text_i && rect.contains_rect(&c_r) {
-                renderer.rect(x + rect.x, y + rect.y, 8, 16, self.fg_cursor);
+                x = start_x;
+                y += c_r.height as i32;
+            } else if c == '\t' {
+                c_r.width = 8 * 4;
+
+                if focused && i == text_i && rect.contains_rect(&c_r) {
+                    draw_box(renderer, Rect::new(x + rect.x, y + rect.y, 8 * 4, 16), theme, &"selection".into());
+                }
+
+                x += c_r.width as i32;
+            } else {
+                if rect.contains_rect(&c_r) {
+                    if i == text_i && focused {
+                        draw_box(renderer, Rect::new(x + rect.x, y + rect.y, 8, 16), theme, &"selection".into());
+                    }
+                    if let Some(mask_c) = self.mask_char.get() {
+                        renderer.char(x + rect.x, y + rect.y, mask_c, theme.color("color", &selector));
+                    } else {
+                        renderer.char(x + rect.x, y + rect.y, c, theme.color("color", &selector));
+                    }
+                }
+
+                x += c_r.width as i32;
             }
+        }
+
+        let c_r = Rect::new(x + rect.x, y + rect.y, 8, 16);
+        if focused && text.len() == text_i && rect.contains_rect(&c_r) {
+            draw_box(renderer, Rect::new(x + rect.x, y + rect.y, 8, 16), theme, &"selection".into());
         }
     }
 
@@ -541,8 +520,4 @@ impl Widget for TextBox {
         }
         focused
     }
-    fn visible(&self, flag: bool){
-        self.visible.set(flag);
-    }
-
 }

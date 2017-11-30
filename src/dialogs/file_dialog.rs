@@ -1,4 +1,4 @@
-use { Color, InnerWindow, Window, List, Entry, Label, Point, Button };
+use { InnerWindow, Window, List, Entry, Label };
 use traits::{ Place, Text, Click };
 
 use std::{fs, io};
@@ -110,7 +110,7 @@ impl FileDialog {
             let mut window = Box::new(Window::from_inner(orb_window.take().unwrap()));
 
             let list = List::new();
-            list.position(2, 2).size(w - 4, h - 34);
+            list.position(2, 2).size(w - 4, h - 4);
 
             match FolderItem::scan(&path) {
                 Ok(items) => for item_res in items {
@@ -125,7 +125,7 @@ impl FileDialog {
 
                             let label = Label::new();
                             label.position(2, 2).size(w - 8, 20).text_offset(2, 2);
-                            label.bg.set(Color::rgb(255, 255, 255));
+                            //label.bg.set(Color::rgb(255, 255, 255));
                             label.text(name);
                             entry.add(&label);
 
@@ -143,7 +143,7 @@ impl FileDialog {
 
                             let label = Label::new();
                             label.position(2, 2).size(w - 8, 20).text_offset(2, 2);
-                            label.bg.set(Color::rgb(242, 222, 222));
+                            //label.bg.set(Color::rgb(242, 222, 222));
                             label.text(err);
                             entry.add(&label);
 
@@ -156,7 +156,7 @@ impl FileDialog {
 
                     let label = Label::new();
                     label.position(2, 2).size(w - 8, 20).text_offset(2, 2);
-                    label.bg.set(Color::rgb(242, 222, 222));
+                    //label.bg.set(Color::rgb(242, 222, 222));
                     label.text(format!("{}", err));
                     entry.add(&label);
 
@@ -165,24 +165,6 @@ impl FileDialog {
             }
 
             window.add(&list);
-            
-                //Cancell button
-            let cancel_button = Button::new();
-            cancel_button
-                .position((w/2) as i32, (h-30) as i32)
-                .size(60, 24)
-                .text("Cancel")
-                .text_offset(6, 6);
-
-            {
-                let window = window.deref() as *const Window;
-                let button = cancel_button.clone();
-                button.on_click(move |_button: &Button, _point: Point| {
-                                    unsafe { (*window).close(); }
-                                    
-                                });
-            }
-            window.add(&cancel_button);
 
             window.exec();
 

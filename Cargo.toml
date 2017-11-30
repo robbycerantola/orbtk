@@ -1,6 +1,6 @@
 [package]
 name = "orbtk"
-version = "0.2.25"
+version = "0.2.26"
 authors = ["Jeremy Soller <jackpot51@gmail.com>"]
 description = "The Orbital Widget Toolkit"
 documentation = "https://docs.rs/orbtk"
@@ -21,3 +21,5 @@ path = "src/lib.rs"
 orbclient = "0.3.11"
 orbfont = "0.1.8"
 orbimage = "0.1.15"
+cssparser = "0.16.0"
+lazy_static = "0.2.8"
