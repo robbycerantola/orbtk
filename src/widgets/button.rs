@@ -18,6 +18,7 @@ pub struct Button {
     click_callback: RefCell<Option<Arc<Fn(&Button, Point)>>>,
     hover: Cell<bool>,
     pressed: Cell<bool>,
+    visible: Cell<bool>,
 }
 
 impl Button {
@@ -29,6 +30,7 @@ impl Button {
             click_callback: RefCell::new(None),
             hover: Cell::new(false),
             pressed: Cell::new(false),
+            visible: Cell::new(true),
         })
     }
 }
@@ -64,6 +66,10 @@ impl Widget for Button {
     fn name(&self) -> &str {
         "Button"
     }
+    
+    fn visible(&self, flag: bool){
+        self.visible.set(flag);
+    }
 
     fn rect(&self) -> &Cell<Rect> {
         &self.rect
@@ -81,6 +87,13 @@ impl Widget for Button {
         if self.hover.get() {
             selector = selector.with_pseudo_class("hover");
         }
+
+        if self.visible.get() {
+            selector = selector.with_pseudo_class("visible");
+        }else{
+            selector = selector.with_pseudo_class("hidden");
+        }
+            
 
         let rect = self.rect.get();
 

@@ -45,6 +45,7 @@ pub struct TextBox {
     /// handler deal with it.
     pub event_filter: RefCell<Option<Arc<Fn(&TextBox, Event, &mut bool, &mut bool) -> Option<Event>>>>,
     pressed: Cell<bool>,
+    visible: Cell<bool>,
 }
 
 impl TextBox {
@@ -61,6 +62,7 @@ impl TextBox {
             enter_callback: RefCell::new(None),
             event_filter: RefCell::new(None),
             pressed: Cell::new(false),
+            visible: Cell::new(true),
         })
     }
 
@@ -139,6 +141,10 @@ impl Widget for TextBox {
 
     fn rect(&self) -> &Cell<Rect> {
         &self.rect
+    }
+
+    fn visible(&self, flag: bool) {
+        self.visible.set(flag);
     }
 
     fn draw(&self, renderer: &mut Renderer, focused: bool, theme: &Theme) {

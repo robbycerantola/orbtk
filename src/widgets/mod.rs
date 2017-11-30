@@ -29,4 +29,5 @@ pub trait Widget : Any {
     fn draw(&self, renderer: &mut Renderer, focused: bool, theme: &Theme);
     fn event(&self, event: Event, focused: bool, redraw: &mut bool) -> bool;
     fn name(&self) -> &str;
+    fn visible(&self, flag: bool);
 }

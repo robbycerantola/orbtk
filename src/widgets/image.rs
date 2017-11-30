@@ -15,6 +15,7 @@ pub struct Image {
     pub rect: Cell<Rect>,
     pub image: RefCell<orbimage::Image>,
     click_callback: RefCell<Option<Arc<Fn(&Image, Point)>>>,
+    visible: Cell<bool>,
 }
 
 impl Image {
@@ -30,7 +31,8 @@ impl Image {
         Arc::new(Image {
             rect: Cell::new(Rect::new(0, 0, image.width(), image.height())),
             image: RefCell::new(image),
-            click_callback: RefCell::new(None)
+            click_callback: RefCell::new(None),
+            visible: Cell::new(true),
         })
     }
 
@@ -61,6 +63,10 @@ impl Widget for Image {
 
     fn rect(&self) -> &Cell<Rect> {
         &self.rect
+    }
+
+    fn visible(&self, flag: bool) {
+        self.visible.set(flag);
     }
 
     fn draw(&self, renderer: &mut Renderer, _focused: bool, _theme: &Theme) {

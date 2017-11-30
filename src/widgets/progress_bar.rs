@@ -19,6 +19,7 @@ pub struct ProgressBar {
     pub maximum: i32,
     click_callback: RefCell<Option<Arc<Fn(&ProgressBar, Point)>>>,
     pressed: Cell<bool>,
+    visible: Cell<bool>,
 }
 
 impl ProgressBar {
@@ -30,6 +31,7 @@ impl ProgressBar {
             maximum: 100,
             click_callback: RefCell::new(None),
             pressed: Cell::new(false),
+            visible: Cell::new(true),
         })
     }
 
@@ -57,6 +59,10 @@ impl Place for ProgressBar {}
 impl Widget for ProgressBar {
     fn name(&self) -> &str {
         "ProgressBar"
+    }
+
+    fn visible(&self, flag: bool) {
+        self.visible.set(flag);
     }
 
     fn rect(&self) -> &Cell<Rect> {

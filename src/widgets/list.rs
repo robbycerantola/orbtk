@@ -63,6 +63,7 @@ pub struct List {
     entries: RefCell<Vec<Arc<Entry>>>,
     pressed: Cell<bool>,
     selected: Cell<Option<u32>>,
+    visible: Cell<bool>,
 }
 
 impl List {
@@ -74,6 +75,7 @@ impl List {
             entries: RefCell::new(vec![]),
             pressed: Cell::new(false),
             selected: Cell::new(None),
+            visible: Cell::new(true),
         })
     }
 
@@ -158,6 +160,10 @@ impl Widget for List {
 
     fn rect(&self) -> &Cell<Rect> {
         &self.rect
+    }
+
+    fn visible(&self, flag: bool) {
+        self.visible.set(flag);
     }
 
     fn draw(&self, renderer: &mut Renderer, _focused: bool, theme: &Theme) {

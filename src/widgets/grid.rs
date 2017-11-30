@@ -18,7 +18,8 @@ pub struct Grid {
     row_count: Cell<usize>,
     column_count: Cell<usize>,
     entries: RefCell<BTreeMap<(usize, usize), Arc<Widget>>>,
-    focused: Cell<Option<(usize, usize)>>
+    focused: Cell<Option<(usize, usize)>>,
+    visible: Cell<bool>,
 }
 
 impl Grid {
@@ -32,6 +33,7 @@ impl Grid {
             column_count: Cell::new(0),
             entries: RefCell::new(BTreeMap::new()),
             focused: Cell::new(None),
+            visible: Cell::new(true),
         })
     }
 
@@ -140,6 +142,10 @@ impl Place for Grid {
 impl Widget for Grid {
     fn name(&self) -> &str {
         "Grid"
+    }
+
+    fn visible(&self, flag: bool) {
+        self.visible.set(flag);
     }
 
     fn rect(&self) -> &Cell<Rect> {

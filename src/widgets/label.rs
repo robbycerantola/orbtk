@@ -19,6 +19,7 @@ pub struct Label {
     pub text_offset: Cell<Point>,
     click_callback: RefCell<Option<Arc<Fn(&Label, Point)>>>,
     pressed: Cell<bool>,
+    visible: Cell<bool>,
 }
 
 impl Label {
@@ -31,6 +32,7 @@ impl Label {
             text_offset: Cell::new(Point::default()),
             click_callback: RefCell::new(None),
             pressed: Cell::new(false),
+            visible: Cell::new(true),
         })
     }
 }
@@ -69,6 +71,10 @@ impl Widget for Label {
 
     fn rect(&self) -> &Cell<Rect> {
         &self.rect
+    }
+
+    fn visible(&self, flag: bool) {
+        self.visible.set(flag);
     }
 
     fn draw(&self, renderer: &mut Renderer, _focused: bool, theme: &Theme) {
