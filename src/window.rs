@@ -178,14 +178,14 @@ impl Window {
         id
     }
     
-    pub fn remove(&self, id: usize) {
+    pub fn hide(&self, id: usize) {
         //hide widget actually, not removing from widgets Vector
         //so references to other widgets'id are kept valid
         if let Some(widget) = self.widgets.borrow().get(id){
             widget.visible(false);
         }
         else{
-            println!("Can't remove widget, not found..");
+            println!("Can't hide widget, not found..");
         }
     
     }
