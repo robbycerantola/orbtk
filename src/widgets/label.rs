@@ -78,22 +78,24 @@ impl Widget for Label {
     }
 
     fn draw(&self, renderer: &mut Renderer, _focused: bool, theme: &Theme) {
-        let rect = self.rect.get();
+        if self.visible.get(){
+            let rect = self.rect.get();
 
-        draw_box(renderer, rect, theme, &Selector::new(Some("label")));
+            draw_box(renderer, rect, theme, &Selector::new(Some("label")));
 
-        let text = self.text.borrow();
+            let text = self.text.borrow();
 
-        let mut point = self.text_offset.get();
-        for c in text.chars() {
-            if c == '\n' {
-                point.x = self.text_offset.get().x;
-                point.y += 16;
-            } else {
-                if point.x + 8 <= rect.width as i32 && point.y + 16 <= rect.height as i32 {
-                    renderer.char(point.x + rect.x, point.y + rect.y, c, theme.color("color", &"label".into()));
+            let mut point = self.text_offset.get();
+            for c in text.chars() {
+                if c == '\n' {
+                    point.x = self.text_offset.get().x;
+                    point.y += 16;
+                } else {
+                    if point.x + 8 <= rect.width as i32 && point.y + 16 <= rect.height as i32 {
+                        renderer.char(point.x + rect.x, point.y + rect.y, c, theme.color("color", &"label".into()));
+                    }
+                    point.x += 8;
                 }
-                point.x += 8;
             }
         }
     }

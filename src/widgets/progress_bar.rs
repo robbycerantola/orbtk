@@ -70,24 +70,26 @@ impl Widget for ProgressBar {
     }
 
     fn draw(&self, renderer: &mut Renderer, _focused: bool, theme: &Theme) {
-        let rect = self.rect.get();
-        let progress_rect = Rect{
-                                width: (rect.width as i32 *
-                                        max(0, min(self.maximum, self.value.get() - self.minimum)) /
-                                        max(1, self.maximum - self.minimum)) as u32,
-                                ..self.rect.get()
-                            };
+        if self.visible.get(){
+            let rect = self.rect.get();
+            let progress_rect = Rect{
+                                    width: (rect.width as i32 *
+                                            max(0, min(self.maximum, self.value.get() - self.minimum)) /
+                                            max(1, self.maximum - self.minimum)) as u32,
+                                    ..self.rect.get()
+                                };
 
-        let selector = Selector::new(Some("progress-bar"));
+            let selector = Selector::new(Some("progress-bar"));
 
-        draw_box(renderer, rect, theme, &selector);
+            draw_box(renderer, rect, theme, &selector);
 
-        let b_r = theme.get("border-radius", &selector).map(|v| v.uint().unwrap()).unwrap_or(1);
-        let b_t = theme.get("border-width", &selector).map(|v| v.uint().unwrap()).unwrap_or(0);
+            let b_r = theme.get("border-radius", &selector).map(|v| v.uint().unwrap()).unwrap_or(1);
+            let b_t = theme.get("border-width", &selector).map(|v| v.uint().unwrap()).unwrap_or(0);
 
 
-        if progress_rect.width >=  b_t + b_r * 2 {
-            draw_box(renderer, progress_rect, theme, &Selector::new(Some("progress")));
+            if progress_rect.width >=  b_t + b_r * 2 {
+                draw_box(renderer, progress_rect, theme, &Selector::new(Some("progress")));
+            }
         }
     }
 

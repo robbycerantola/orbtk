@@ -99,7 +99,11 @@ impl Place for Menu {}
 
 impl Widget for Menu {
     fn name(&self) -> &str {
-        "Menu"
+        if self.activated.get() {
+            "MenuActivated"
+        } else {
+            "Menu"
+        }
     }
 
     fn rect(&self) -> &Cell<Rect> {

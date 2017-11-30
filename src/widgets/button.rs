@@ -88,13 +88,6 @@ impl Widget for Button {
             selector = selector.with_pseudo_class("hover");
         }
 
-        if self.visible.get() {
-            selector = selector.with_pseudo_class("visible");
-        }else{
-            selector = selector.with_pseudo_class("hidden");
-        }
-            
-
         let rect = self.rect.get();
 
         let w = rect.width as i32;

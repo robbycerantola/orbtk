@@ -227,7 +227,8 @@ impl Window {
                 _ => ()
             }
 
-            for i in 0..self.widgets.borrow().len() {
+           //reversed order here to give priority to menu widgets as they are added usually at last to the window
+            for i in (0..self.widgets.borrow().len()).rev() {
                 if let Some(widget) = self.widgets.borrow().get(i) {
                     if widget.event(event, self.widget_focus.get() == i, &mut self.redraw) {
                         if self.widget_focus.get() != i {
@@ -235,6 +236,9 @@ impl Window {
                             self.redraw = true;
                         }
                     }
+                    //if widget Menu is activated then break to avoid clicking also on widgets under the unfolded menu
+                    if widget.name() == "MenuActivated" {break;} 
+
                 }
             }
         }
