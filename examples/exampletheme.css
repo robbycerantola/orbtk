@@ -25,16 +25,43 @@ label {
     border-width: 0;
 }
 
+<<<<<<< HEAD
+=======
+label.padded {
+    border-width: 1;
+    border-radius: 20;
+}
+
+label.padded :clicked {
+    background: #FFC945;
+}
+
+>>>>>>> upstream/master
 menu {}
 
 menu-button, action, separator {
     border-width: 0;
 }
 
+<<<<<<< HEAD
+=======
+action.critical {
+    background: #D93636;
+    color: #000000;
+}
+
+>>>>>>> upstream/master
 menu-button :active, action :active {
     background: #8fd2db;
 }
 
+<<<<<<< HEAD
+=======
+action.critical :active {
+    background: #F18282;
+}
+
+>>>>>>> upstream/master
 progress {
     background: #9a93e1;
     border-color: #899ba6;
