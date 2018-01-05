@@ -3,17 +3,18 @@ use std::cell::{Cell, RefCell};
 use std::cmp::{min, max};
 use std::sync::Arc;
 
-use cell::CheckSet;
+use cell::{CloneCell, CheckSet};
 use draw::draw_box;
 use event::Event;
 use point::Point;
 use rect::Rect;
 use theme::{Theme, Selector};
-use traits::{Click, Place};
+use traits::{Click, Place, Style};
 use widgets::Widget;
 
 pub struct ProgressBar {
     pub rect: Cell<Rect>,
+    pub selector: CloneCell<Selector>,
     pub value: Cell<i32>,
     pub minimum: i32,
     pub maximum: i32,
@@ -26,6 +27,7 @@ impl ProgressBar {
     pub fn new() -> Arc<Self> {
         Arc::new(ProgressBar {
             rect: Cell::new(Rect::default()),
+            selector: CloneCell::new(Selector::new(Some("progress"))),
             value: Cell::new(0),
             minimum: 0,
             maximum: 100,
@@ -55,6 +57,19 @@ impl Click for ProgressBar {
 }
 
 impl Place for ProgressBar {}
+
+impl Style for ProgressBar {
+    fn with_class<S: Into<String>>(&self, class: S) -> &Self {
+        self.selector.set(self.selector.get().with_class(class));
+        self
+    }
+
+    fn with_pseudo_class<S: Into<String>>(&self, pseudo_class: S) -> &Self {
+        self.selector.set(self.selector.get().with_pseudo_class(pseudo_class));
+        self
+    }
+}
+
 
 impl Widget for ProgressBar {
     fn name(&self) -> &str {
@@ -86,9 +101,9 @@ impl Widget for ProgressBar {
             let b_r = theme.get("border-radius", &selector).map(|v| v.uint().unwrap()).unwrap_or(1);
             let b_t = theme.get("border-width", &selector).map(|v| v.uint().unwrap()).unwrap_or(0);
 
-
+            let selector2 = &self.selector.get();
             if progress_rect.width >=  b_t + b_r * 2 {
-                draw_box(renderer, progress_rect, theme, &Selector::new(Some("progress")));
+                draw_box(renderer, progress_rect, theme, selector2);// &Selector::new(Some("progress")));
             }
         }
     }
