@@ -70,7 +70,7 @@ fn main() {
 
     for i in 1..11 {
         combo_box.push(&format!("Entry {}", i));
-    }   
+    }
 
     y += combo_box.rect.get().height as i32 + 10;
 

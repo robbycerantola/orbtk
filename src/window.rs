@@ -241,7 +241,7 @@ impl Window {
                         }
                     }
                     //if widget Menu is activated then break to avoid clicking also on widgets under the unfolded menu
-                    if widget.name() == "MenuActivated" {break;} 
+                    if widget.name() == "MenuActivated" || widget.name() == "ComboBoxActivated" {break;} 
 
                 }
             }
@@ -348,7 +348,7 @@ pub struct WindowBuilder<'a> {
 
 impl<'a> WindowBuilder<'a> {
     pub fn new(rect: Rect, title: &'a str) -> Self {
-        WindowBuilder{rect: rect, title: title, font: None, theme: None, flags: None}
+        WindowBuilder{rect: rect, title: title, font: orbfont::Font::find(None, None, None).ok(), theme: None, flags: None}
     }
     
     pub fn font(mut self, font: orbfont::Font) -> Self {
