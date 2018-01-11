@@ -89,6 +89,7 @@ impl Widget for Label {
 
     fn visible(&self, flag: bool) {
         self.visible.set(flag);
+        
     }
 
     fn draw(&self, renderer: &mut Renderer, _focused: bool, theme: &Theme) {

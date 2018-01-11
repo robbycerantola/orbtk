@@ -67,7 +67,7 @@ impl Widget for Button {
         "Button"
     }
     
-    fn visible(&self, flag: bool){
+    fn visible(&self, flag: bool) {
         self.visible.set(flag);
     }
 

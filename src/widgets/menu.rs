@@ -212,7 +212,7 @@ impl Widget for Menu {
         focused
     }
     
-    fn visible(&self, flag: bool){
+    fn visible(&self, flag: bool) {
         self.visible.set(flag);
     }
 
@@ -355,7 +355,7 @@ impl Widget for Action {
 
         false
     }
-    fn visible(&self, flag: bool){
+    fn visible(&self, flag: bool) {
      !flag;
     }
 }
@@ -404,7 +404,7 @@ impl Widget for Separator {
         }
         ignore_event
     }
-    fn visible(&self, flag: bool){
+    fn visible(&self, flag: bool) {
         !flag;
     }
 
