@@ -93,7 +93,7 @@ impl Widget for Entry {
 
         let mut point = Point::new(rect.x + offset.x, rect.y + rect.height as i32 / 2 - 8);
         for c in self.text.get().chars() {
-            if point.x + 8 <= rect.width as i32 - 2 * offset.x {
+            if point.x + 8 <= rect.x +  rect.width as i32 - offset.x {
                 //let mut selector = Selector::new(Some("combo-box-entry"));
                 let selector = &self.selector.get();
 
@@ -159,6 +159,8 @@ impl Widget for Entry {
         !flag;
     }
 }
+
+impl Place for Entry {}
 
 pub struct ComboBox {
     pub rect: Cell<Rect>,
@@ -351,11 +353,11 @@ impl Widget for ComboBox {
             }
 
             // draw selected text
-            let mut point = Point::new(rect.x + offset.x - 8, rect.y + rect.height as i32 / 2 - 8);
+            let mut point = Point::new(rect.x + offset.x, rect.y + rect.height as i32 / 2 - 8);
             for c in self.text.get().chars() {
-                if point.x + 8 <= rect.width as i32 - toggle_rect.width as i32 - 2 * offset.x {
+                if point.x + 8 <= rect.x + rect.width as i32 - toggle_rect.width as i32 - 2 * offset.x {
                     renderer.char(
-                        point.x + rect.x,
+                        point.x, // + rect.x,
                         point.y,
                         c,
                         theme.color("color", &"label".into()),
