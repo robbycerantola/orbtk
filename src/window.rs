@@ -177,29 +177,6 @@ impl Window {
         widgets.push(widget.clone());
         id
     }
-    
-    pub fn hide(&self, id: usize) {
-        //hide widget actually, not removing from widgets Vector
-        //so references to other widgets'id are kept valid
-        if let Some(widget) = self.widgets.borrow().get(id){
-            widget.visible(false);
-        }
-        else{
-            println!("Can't hide widget, not found..");
-        }
-    
-    }
-
-    pub fn unhide(&self, id: usize) {
-        //show up widget removed by id 
-        if let Some(widget) = self.widgets.borrow().get(id){
-            widget.visible(true);
-        }
-        else{
-            println!("Can't unhide widget, not found..");
-        }
-    
-    }
 
     pub fn draw(&self) {
         let mut inner = self.inner.borrow_mut();
